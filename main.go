@@ -9,27 +9,30 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-type Game struct {
-	PlayerImage *ebiten.Image
-	// the X an Y variables below are used
-	// to keep track of the player position on the screen
+type Sprite struct {
+	// sprite image and x, y coordinates
+	Img  *ebiten.Image
 	X, Y float64
+}
+
+type Game struct {
+	player *Sprite
 }
 
 func (g *Game) Update() error {
 
 	// react to key presses
 	if ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		g.X += 2
+		g.player.X += 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		g.X -= 2
+		g.player.X -= 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		g.Y -= 2
+		g.player.Y -= 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyS) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		g.Y += 2
+		g.player.Y += 2
 	}
 
 	return nil
@@ -39,11 +42,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{100, 50, 200, 255})
 
 	opts := ebiten.DrawImageOptions{}
-	opts.GeoM.Translate(g.X, g.Y)
+	opts.GeoM.Translate(g.player.X, g.player.Y)
 
 	// draw the player char
 	screen.DrawImage(
-		g.PlayerImage.SubImage(
+		g.player.Img.SubImage(
 			image.Rect(0, 0, 16, 16),
 		).(*ebiten.Image),
 		&opts,
@@ -65,7 +68,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := ebiten.RunGame(&Game{PlayerImage: playerImg, X: 100, Y: 100}); err != nil {
+	game := Game{
+		player: &Sprite{
+			Img: playerImg,
+			X:   50.0,
+			Y:   50.0,
+		},
+	}
+
+	if err := ebiten.RunGame(&game); err != nil {
 		log.Fatal(err)
 	}
 }
