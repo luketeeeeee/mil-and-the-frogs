@@ -1,0 +1,35 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+        "tilesets",
+        "."
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "tilesets/tileset-floor.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 5.5
+        }
+    },
+    "last.imagePath": "/home/lucas/projetos/mil-and-the-frogs/assets/images",
+    "map.height": 80,
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 100,
+    "openFiles": [
+        "tilesets/tileset-floor.tsx"
+    ],
+    "project": "matf.tiled-project",
+    "recentFiles": [
+        "tilesets/tileset-floor.tsx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
