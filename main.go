@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -10,14 +11,29 @@ import (
 )
 
 type Sprite struct {
-	// sprite image and x, y coordinates
 	Img  *ebiten.Image
 	X, Y float64
 }
 
+type Player struct {
+	*Sprite
+	Fear uint
+}
+
+type Enemy struct {
+	*Sprite
+	FollowsPlayer bool
+}
+
+type KitQuack struct {
+	*Sprite
+	AmtCalmEffect uint
+}
+
 type Game struct {
-	player  *Sprite
-	sprites []*Sprite
+	player    *Player
+	enemies   []*Enemy
+	kitQuacks []*KitQuack
 }
 
 func (g *Game) Update() error {
@@ -36,17 +52,26 @@ func (g *Game) Update() error {
 		g.player.Y += 2
 	}
 
-	for _, sprite := range g.sprites {
-		if sprite.X < g.player.X {
-			sprite.X += 1
-		} else if sprite.X > g.player.X {
-			sprite.X -= 1
-		}
+	for _, sprite := range g.enemies {
+		if sprite.FollowsPlayer {
+			if sprite.X < g.player.X {
+				sprite.X += 1
+			} else if sprite.X > g.player.X {
+				sprite.X -= 1
+			}
 
-		if sprite.Y < g.player.Y {
-			sprite.Y += 1
-		} else if sprite.Y > g.player.Y {
-			sprite.Y -= 1
+			if sprite.Y < g.player.Y {
+				sprite.Y += 1
+			} else if sprite.Y > g.player.Y {
+				sprite.Y -= 1
+			}
+		}
+	}
+
+	for _, kitQuack := range g.kitQuacks {
+		if g.player.X > kitQuack.X {
+			g.player.Fear -= kitQuack.AmtCalmEffect
+			fmt.Println("Pegou um KitQuack! Seu nível de medo agora está em: %d\n", g.player.Fear)
 		}
 	}
 
@@ -70,11 +95,26 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	opts.GeoM.Reset()
 
-	for _, sprite := range g.sprites {
-		opts.GeoM.Translate(sprite.X, sprite.Y)
+	for _, enemy := range g.enemies {
+		opts.GeoM.Translate(enemy.X, enemy.Y)
 
 		screen.DrawImage(
-			sprite.Img.SubImage(
+			enemy.Img.SubImage(
+				image.Rect(0, 0, 16, 16),
+			).(*ebiten.Image),
+			&opts,
+		)
+
+		opts.GeoM.Reset()
+	}
+
+	opts.GeoM.Reset()
+
+	for _, kitquack := range g.kitQuacks {
+		opts.GeoM.Translate(kitquack.X, kitquack.Y)
+
+		screen.DrawImage(
+			kitquack.Img.SubImage(
 				image.Rect(0, 0, 16, 16),
 			).(*ebiten.Image),
 			&opts,
@@ -90,7 +130,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 
 func main() {
 	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("Hello, World!")
+	ebiten.SetWindowTitle("Mil and the Frogs")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
 	playerImg, _, err := ebitenutil.NewImageFromFile("assets/images/mil.png")
@@ -99,23 +139,53 @@ func main() {
 		log.Fatal(err)
 	}
 
-	greeFrogImg, _, err := ebitenutil.NewImageFromFile("assets/images/green-frog.png")
+	greenFrogImg, _, err := ebitenutil.NewImageFromFile("assets/images/green-frog.png")
+	if err != nil {
+		// handle error
+		log.Fatal(err)
+	}
+
+	kitQuackImg, _, err := ebitenutil.NewImageFromFile("assets/images/kit-quack.png")
 	if err != nil {
 		// handle error
 		log.Fatal(err)
 	}
 
 	game := Game{
-		player: &Sprite{
-			Img: playerImg,
-			X:   50.0,
-			Y:   50.0,
+		player: &Player{
+			Sprite: &Sprite{
+				Img: playerImg,
+				X:   50.0,
+				Y:   50.0,
+			},
+			Fear: 30,
 		},
-		sprites: []*Sprite{
+		enemies: []*Enemy{
 			{
-				Img: greeFrogImg,
-				X:   60.0,
-				Y:   60.0,
+				&Sprite{
+					Img: greenFrogImg,
+					X:   60.0,
+					Y:   60.0,
+				},
+				false,
+			},
+			{
+				&Sprite{
+					Img: greenFrogImg,
+					X:   80.0,
+					Y:   80.0,
+				},
+				true,
+			},
+		},
+		kitQuacks: []*KitQuack{
+			{
+				&Sprite{
+					Img: kitQuackImg,
+					X:   90.0,
+					Y:   20.0,
+				},
+				20,
 			},
 		},
 	}
