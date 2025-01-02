@@ -31,9 +31,11 @@ type KitQuack struct {
 }
 
 type Game struct {
-	player    *Player
-	enemies   []*Enemy
-	kitQuacks []*KitQuack
+	player      *Player
+	enemies     []*Enemy
+	kitQuacks   []*KitQuack
+	tilemapJSON *TilemapJSON
+	tilemapImg  *ebiten.Image
 }
 
 func (g *Game) Update() error {
@@ -151,6 +153,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	tilemapJSON, err := NewTilemapJSON("assets/maps/spawn.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	game := Game{
 		player: &Player{
 			Sprite: &Sprite{
@@ -188,6 +195,7 @@ func main() {
 				20,
 			},
 		},
+		tilemapJSON: tilemapJSON,
 	}
 
 	if err := ebiten.RunGame(&game); err != nil {
