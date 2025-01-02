@@ -5,35 +5,16 @@ import (
 	"image"
 	"image/color"
 	"log"
+	"mil-and-the-frogs/entities"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-type Sprite struct {
-	Img  *ebiten.Image
-	X, Y float64
-}
-
-type Player struct {
-	*Sprite
-	Fear uint
-}
-
-type Enemy struct {
-	*Sprite
-	FollowsPlayer bool
-}
-
-type KitQuack struct {
-	*Sprite
-	AmtCalmEffect uint
-}
-
 type Game struct {
-	player      *Player
-	enemies     []*Enemy
-	kitQuacks   []*KitQuack
+	player      *entities.Player
+	enemies     []*entities.Enemy
+	kitQuacks   []*entities.KitQuack
 	tilemapJSON *TilemapJSON
 	tilemapImg  *ebiten.Image
 }
@@ -84,6 +65,38 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{50, 150, 250, 255})
 
 	opts := ebiten.DrawImageOptions{}
+
+	// loop over the layers
+	for _, layer := range g.tilemapJSON.Layers {
+		// looping over the tiles in the layer
+		for index, id := range layer.Data {
+			// where to draw
+			x := index % layer.Width
+			y := index / layer.Width
+
+			// where to draw, but now in pixels
+			x *= 16
+			y *= 16
+
+			// what to draw
+			srcX := (id - 1) % 22
+			srcY := (id - 1) / 22
+
+			srcX *= 16
+			srcY *= 16
+
+			opts.GeoM.Translate(float64(x), float64(y))
+
+			// in fact drawing
+			screen.DrawImage(
+				g.tilemapImg.SubImage(image.Rect(srcX, srcY, srcX+16, srcY+16)).(*ebiten.Image),
+				&opts,
+			)
+
+			opts.GeoM.Reset()
+		}
+	}
+
 	opts.GeoM.Translate(g.player.X, g.player.Y)
 
 	// draw the player char
@@ -153,49 +166,56 @@ func main() {
 		log.Fatal(err)
 	}
 
+	tilemapImg, _, err := ebitenutil.NewImageFromFile("assets/images/tileset-floor.png")
+	if err != nil {
+		// handle error
+		log.Fatal(err)
+	}
+
 	tilemapJSON, err := NewTilemapJSON("assets/maps/spawn.json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	game := Game{
-		player: &Player{
-			Sprite: &Sprite{
+		player: &entities.Player{
+			Sprite: &entities.Sprite{
 				Img: playerImg,
 				X:   50.0,
 				Y:   50.0,
 			},
-			Fear: 30,
+			Fear: 50,
 		},
-		enemies: []*Enemy{
+		enemies: []*entities.Enemy{
 			{
-				&Sprite{
+				Sprite: &entities.Sprite{
 					Img: greenFrogImg,
 					X:   60.0,
 					Y:   60.0,
 				},
-				false,
+				FollowsPlayer: false,
 			},
 			{
-				&Sprite{
+				Sprite: &entities.Sprite{
 					Img: greenFrogImg,
 					X:   80.0,
 					Y:   80.0,
 				},
-				true,
+				FollowsPlayer: true,
 			},
 		},
-		kitQuacks: []*KitQuack{
+		kitQuacks: []*entities.KitQuack{
 			{
-				&Sprite{
+				Sprite: &entities.Sprite{
 					Img: kitQuackImg,
 					X:   90.0,
 					Y:   20.0,
 				},
-				20,
+				AmtCalmEffect: 1.0,
 			},
 		},
 		tilemapJSON: tilemapJSON,
+		tilemapImg:  tilemapImg,
 	}
 
 	if err := ebiten.RunGame(&game); err != nil {

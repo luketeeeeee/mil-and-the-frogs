@@ -12,7 +12,7 @@ type TilemapLayerJSON struct {
 }
 
 type TilemapJSON struct {
-	Tiles []TilemapLayerJSON `json:"layers"`
+	Layers []TilemapLayerJSON `json:"layers"`
 }
 
 func NewTilemapJSON(filepath string) (*TilemapJSON, error) {
